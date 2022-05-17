@@ -16,9 +16,9 @@ const xml2js = require('xml2js');
 
 
 /**
- *
- * @param {*} xmlInput
- * @param {*} onFailure
+ * 
+ * @param {*} xmlInput 
+ * @param {*} onFailure 
  * @returns {host[]} - Array of hosts
  */
 function convertRawJsonToScanResults(xmlInput) {
@@ -37,7 +37,8 @@ function convertRawJsonToScanResults(xmlInput) {
       ip: null,
       mac: null,
       openPorts: null,
-      osNmap: null
+      osNmap: null,
+      HostScript : null
     }
 
     //Get hostname
@@ -59,6 +60,11 @@ function convertRawJsonToScanResults(xmlInput) {
       }
     })
 
+    if (host.hostscript) {
+      const hostscriptList = host.hostscript[0].script
+      newHost.HostScript = hostscriptList
+    }
+
     //get ports
     if (host.ports && host.ports[0].port) {
       const portList = host.ports[0].port
@@ -68,28 +74,23 @@ function convertRawJsonToScanResults(xmlInput) {
       })
 
       newHost.openPorts = openPorts.map((portItem) => {
-        // console.log(JSON.stringify(portItem, null, 4))
 
         const port = parseInt(portItem.$.portid)
         const protocol = portItem.$.protocol
-
-        if (portItem.service) {
-          const service = portItem.service[0].$.name
-          const tunnel = portItem.service[0].$.tunnel
-          const method = portItem.service[0].$.method
-          const product = portItem.service[0].$.tunnel
-        }
+        const service = portItem.service[0].$.name
+        const tunnel = portItem.service[0].$.tunnel
+        const method = portItem.service[0].$.method
+        const product = portItem.service[0].$.tunnel
+        const script = portItem.script ? portItem.script[0].$.output : null
 
         let portObject = {}
         if(port) portObject.port = port
         if(protocol) portObject.protocol = protocol
-
-        if (portItem.service) {
-          if(service) portObject.service = service
-          if(tunnel) portObject.tunnel = tunnel
-          if(method) portObject.method = method
-          if(product) portObject.product = product
-        }
+        if(service) portObject.service = service
+        if(tunnel) portObject.tunnel = tunnel
+        if(method) portObject.method = method
+        if(product) portObject.product = product
+        if(script) portObject.script = script
 
         return portObject
       })
@@ -170,6 +171,7 @@ class NmapScan extends EventEmitter {
     process.on('uncaughtException', this.killChild);
     process.on('exit', this.killChild);
     this.child.stdout.on("data", (data) => {
+      // console.log(`chouf hadi  :  ${data.toString()}`);
       if (data.indexOf("percent") > -1) {
         // console.log(data.toString());
       } else {
@@ -197,10 +199,8 @@ class NmapScan extends EventEmitter {
       process.removeListener('exit', this.killChild);
 
       if (this.error) {
-        this.stopTimer();
         this.emit('error', this.error);
       } else if (this.cancelled === true) {
-        this.stopTimer();
         this.emit('error', "Over scan timeout " + this.scanTimeout);
       } else {
         this.rawDataHandler(this.rawData);
@@ -227,8 +227,8 @@ class NmapScan extends EventEmitter {
     let results;
     //turn NMAP's xml output into a json object
     xml2js.parseString(data, (err, result) => {
+      // console.log("result ha : ", JSON.stringify(result, 0, 4))
       if (err) {
-        this.stopTimer();
         this.emit('error', "Error converting XML to JSON in xml2js: " + err);
       } else {
         this.rawJSON = result;
