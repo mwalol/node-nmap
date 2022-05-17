@@ -40,7 +40,7 @@ function convertRawJsonToScanResults(xmlInput) {
       osNmap: null,
       HostScript : null
     }
-
+    //console.log(`dump all : ${JSON.stringify(host,0,4)}`)
     //Get hostname
     if (host.hostnames && host.hostnames[0] !== "\r\n" && host.hostnames[0] !== "\n") {
       newHost.hostname = host.hostnames[0].hostname[0].$.name
@@ -61,7 +61,7 @@ function convertRawJsonToScanResults(xmlInput) {
     })
 
     if (host.hostscript) {
-      const hostscriptList = host.hostscript[0].script
+      const hostscriptList = host.hostscript[0].script ? host.hostscript[0].script[0].$.output : null
       newHost.HostScript = hostscriptList
     }
 
