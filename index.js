@@ -40,7 +40,7 @@ function convertRawJsonToScanResults(xmlInput) {
       osNmap: null,
       HostScript : null
     }
-    //console.log(`dump all : ${JSON.stringify(host,0,4)}`)
+    // console.log(`dump all : ${JSON.stringify(host,0,4)}`)
     //Get hostname
     if (host.hostnames && host.hostnames[0] !== "\r\n" && host.hostnames[0] !== "\n") {
       newHost.hostname = host.hostnames[0].hostname[0].$.name
@@ -61,7 +61,11 @@ function convertRawJsonToScanResults(xmlInput) {
     })
 
     if (host.hostscript) {
-      const hostscriptList = host.hostscript[0].script ? host.hostscript[0].script[0].$.output : null
+      const hostscriptList = host.hostscript ? host.hostscript.map(x => {
+        return x.script.map(y => {
+          return y.$
+        })
+      }) : null
       newHost.HostScript = hostscriptList
     }
 
@@ -74,14 +78,17 @@ function convertRawJsonToScanResults(xmlInput) {
       })
 
       newHost.openPorts = openPorts.map((portItem) => {
-
+       
         const port = parseInt(portItem.$.portid)
         const protocol = portItem.$.protocol
-        const service = portItem.service[0].$.name
-        const tunnel = portItem.service[0].$.tunnel
-        const method = portItem.service[0].$.method
-        const product = portItem.service[0].$.tunnel
-        const script = portItem.script ? portItem.script[0].$.output : null
+        const service = portItem.service ? portItem.service[0].$.name : null
+        const tunnel = portItem.service ? portItem.service[0].$.tunnel : null
+        const method = portItem.service ? portItem.service[0].$.method : null
+        const product = portItem.service ? portItem.service[0].$.tunnel : null
+
+        const script = portItem.script ? portItem.script.map(x => x.$) : null
+        
+        
 
         let portObject = {}
         if(port) portObject.port = port
