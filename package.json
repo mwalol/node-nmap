@@ -27,7 +27,7 @@
   }],
   "homepage": "https://github.com/Johnhhorton/node-nmap#readme",
   "dependencies": {
-    "queued-up": "^2.0.2",
+    "queued-up": "https://github.com/mwalol/queued-up",
     "xml2js": "^0.4.23"
   },
   "devDependencies": {
